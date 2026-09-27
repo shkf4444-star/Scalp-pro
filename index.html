@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Pro Trading & Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0e11;
+            color: #eaecef;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: #181a20;
+            border-bottom: 1px solid #2b313a;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #f0b90b;
+        }
+
+        nav a {
+            color: #848e9c;
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            color: #f0b90b;
+        }
+
+        .container {
+            width: 92%;
+            margin: 20px auto;
+        }
+
+        /* Tabs Navigation */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #2b313a;
+        }
+
+        .tab-btn {
+            background: #181a20;
+            border: 1px solid #2b313a;
+            color: #848e9c;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: #f0b90b;
+            color: #000;
+            border-color: #f0b90b;
+        }
+
+        /* Table Design */
+        .table-container {
+            background: #181a20;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #2b313a;
+            overflow-x: auto;
+            min-height: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 12px;
+            color: #848e9c;
+            border-bottom: 1px solid #2b313a;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #2b313a;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .green { color: #0ecb81; }
+        .red { color: #f6465d; }
+        .badge {
+            background: #2b313a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* Signal Cards */
+        .signals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .card {
+            background: #181a20;
+            border: 1px solid #2b313a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card h3 {
+            color: #f0b90b;
+            margin-bottom: 15px;
+        }
+
+        .card ul { list-style: none; }
+        .card ul li { margin-bottom: 8px; color: #b7bdc6; font-size: 14px; }
+
+        .btn-wa {
+            display: inline-block;
+            background: #25D366;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #848e9c;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Binance Pro Scanner</div>
+        <nav>
+            <a href="#scanner">Market Scanner</a>
+            <a href="#chart">Trading Chart</a>
+            <a href="#signals">SMC Signals</a>
+        </nav>
+    </header>
+
+    <div class="container" id="scanner">
+        <!-- Filter Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchCategory('all')">All Binance Spot</button>
+            <button class="tab-btn" onclick="switchCategory('uptrend')">🔥 Uptrend Coin</button>
+            <button class="tab-btn" onclick="switchCategory('v1scalp')">⚡ V1 Scalp (RSI 50-60)</button>
+            <button class="tab-btn" onclick="switchCategory('hidden')">🎯 Hidden Bullish (RSI 30-40)</button>
+            <button class="tab-btn" onclick="switchCategory('gainers')">🚀 Gainers</button>
+            <button class="tab-btn" onclick="switchCategory('oversold')">❄️ Over Sold (RSI &lt; 30)</button>
+            <button class="tab-btn" onclick="switchCategory('emascalp')">📈 EMA Scalp (Bullish Cross)</button>
+        </div>
+
+        <!-- Table Display -->
+        <div class="table-container">
+            <h3 id="category-title" style="margin-bottom: 15px; color: #f0b90b;">All Binance Spot Pairs</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pair</th>
+                        <th>Price (USDT)</th>
+                        <th>24h Change</th>
+                        <th>1h Change</th>
+                        <th>1h RSI</th>
+                        <th>Status / Signal</th>
+                    </tr>
+                </thead>
+                <tbody id="coin-table-body">
+                    <tr>
+                        <td colspan="6" class="loading">Loading Binance Live Scanner Data... Please wait.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TradingView Chart -->
+        <div style="margin-top: 40px; background: #181a20; padding: 20px; border-radius: 8px; border: 1px solid #2b313a;" id="chart">
+            <h3 style="color: #f0b90b; margin-bottom: 15px;">Live Chart (BTC/USDT)</h3>
+            <div id="tradingview_chart" style="height: 500px;"></div>
+        </div>
+
+        <!-- SMC & WhatsApp Signals Section -->
+        <div class="signals-grid" id="signals">
+            <div class="card">
+                <h3>Smart Money Concepts (SMC)</h3>
+                <ul>
+                    <li>• Market Structure: Break of Structure (BOS)</li>
+                    <li>• Order Block: Bullish Demand Zone</li>
+                    <li>• FVG: Fair Value Gap Confirmation</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>VIP Community Signals</h3>
+                <p style="color: #848e9c; font-size: 14px;">Daily Binance Spot & Futures Setup with High Win-Rate.</p>
+                <a href="https://wa.me/" target="_blank" class="btn-wa">Join WhatsApp Group</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- TradingView Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT",
+            "interval": "60",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "enable_publishing": false,
+            "container_id": "tradingview_chart"
+        });
+    </script>
+
+    <!-- Binance API & Scanner Logic Script -->
+    <script>
+        let rawBinanceData = [];
+        let processedCoins = [];
+        let currentFilter = 'all';
+
+        // Calculate RSI Logic
+        function calculateRSI(klines, period = 14) {
+            let gains = 0, losses = 0;
+            for (let i = 1; i <= period; i++) {
+                let change = klines[i].close - klines[i - 1].close;
+                if (change >= 0) gains += change;
+                else losses -= change;
+            }
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+            if (avgLoss === 0) return 100;
+            let rs = avgGain / avgLoss;
+            return (100 - (100 / (1 + rs))).toFixed(1);
+        }
+
+        // Calculate EMA
+        function calculateEMA(closes, period) {
+            const k = 2 / (period + 1);
+            let ema = closes[0];
+            for (let i = 1; i < closes.length; i++) {
+                ema = (closes[i] * k) + (ema * (1 - k));
+            }
+            return ema;
+        }
+
+        async function fetchBinanceData() {
+            try {
+                // Fetch 24hr data for top USDT coins
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                const data = await res.json();
+                
+                // Filter top 30 liquid USDT pairs to keep scanner fast
+                const topPairs = data.filter(d => d.symbol.endsWith('USDT'))
+                                    .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                                    .slice(0, 35);
+
+                processedCoins = [];
+
+                for (let coin of topPairs) {
+                    // Fetch 1-hour candles for technical calculations
+                    const klineRes = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=1h&limit=30`);
+                    const klinesData = await klineRes.json();
+                    
+                    const klines = klinesData.map(k => ({ close: parseFloat(k[4]) }));
+                    const closes = klines.map(k => k.close);
+
+                    const rsi1h = calculateRSI(klines);
+                    const change1h = (((closes[closes.length - 1] - closes[closes.length - 2]) / closes[closes.length - 2]) * 100).toFixed(2);
+                    
+                    // EMA Crossover logic (EMA 9 vs EMA 21)
+                    const ema9 = calculateEMA(closes, 9);
+                    const ema21 = calculateEMA(closes, 21);
+                    const prevEma9 = calculateEMA(closes.slice(0, -1), 9);
+                    const prevEma21 = calculateEMA(closes.slice(0, -1), 21);
+
+                    const emaBullishCross = (prevEma9 <= prevEma21) && (ema9 > ema21);
+
+                    processedCoins.push({
+                        symbol: coin.symbol,
+                        price: parseFloat(coin.lastPrice),
+                        change24h: parseFloat(coin.priceChangePercent),
+                        change1h: parseFloat(change1h),
+                        rsi1h: parseFloat(rsi1h),
+                        emaBullishCross: emaBullishCross
+                    });
+                }
+
+                renderFilteredData();
+            } catch (err) {
+                console.error("Binance Scanner Error:", err);
+            }
+        }
+
+        function switchCategory(category) {
+            currentFilter = category;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const titles = {
+                'all': 'All Binance Spot Pairs',
+                'uptrend': '🔥 Uptrend Coins (1h & 24h Bullish)',
+                'v1scalp': '⚡ V1 Scalp (1h RSI: 50 - 60)',
+                'hidden': '🎯 Hidden Bullish (1h RSI: 30 - 40)',
+                'gainers': '🚀 Top Gainers (24h Volume/Price)',
+                'oversold': '❄️ Over Sold Zone (1h RSI < 30)',
+                'emascalp': '📈 EMA Scalp (Fast EMA Cross Up)'
+            };
+            document.getElementById('category-title').innerText = titles[category];
+            renderFilteredData();
+        }
+
+        function renderFilteredData() {
+            let filtered = [...processedCoins];
+
+            if (currentFilter === 'uptrend') {
+                filtered = filtered.filter(c => c.change24h > 0 && c.change1h > 0);
+            } else if (currentFilter === 'v1scalp') {
+                filtered = filtered.filter(c => c.rsi1h >= 50 && c.rsi1h <= 60);
+            } else if (currentFilter === 'hidden') {
+                filtered = filtered.filter(c => c.rsi1h >= 30 && c.rsi1h <= 40);
+            } else if (currentFilter === 'gainers') {
+                filtered.sort((a,b) => b.change24h - a.change24h);
+            } else if (currentFilter === 'oversold') {
+                filtered = filtered.filter(c => c.rsi1h < 30);
+            } else if (currentFilter === 'emascalp') {
+                filtered = filtered.filter(c => c.emaBullishCross || (c.change1h > 0.5 && c.rsi1h > 50));
+            }
+
+            const tbody = document.getElementById('coin-table-body');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#848e9c;">No coins matching this criteria right now. Check back in a few minutes.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(coin => {
+                const row = `
+                    <tr>
+                        <td style="font-weight:bold;">${coin.symbol.replace('USDT', ' / USDT')}</td>
+                        <td>$${coin.price.toLocaleString()}</td>
+                        <td class="${coin.change24h >= 0 ? 'green' : 'red'}">${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%</td>
+                        <td class="${coin.change1h >= 0 ? 'green' : 'red'}">${coin.change1h >= 0 ? '+' : ''}${coin.change1h}%</td>
+                        <td><span class="badge">${coin.rsi1h}</span></td>
+                        <td><span class="green" style="font-size:12px; font-weight:bold;">Active Signal</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Run scanner on load
+        fetchBinanceData();
+        // Refresh Scanner every 30 seconds
+        setInterval(fetchBinanceData, 30000);
+    </script>
+</body>
+</html>
